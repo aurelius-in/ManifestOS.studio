@@ -1,115 +1,38 @@
-export default function StudioPage() {
-  const stages = [
-    'Problem',
-    'Understand',
-    'Envision',
-    'Blueprint',
-    'Build',
-    'Refine',
-    'Share',
-  ];
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  return (
-    <main className="min-h-screen bg-[#080706] text-[#FFF8E7]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 lg:flex-row">
-        <aside className="w-full rounded-[1.75rem] border border-[#D89B22]/20 bg-[#12100C] p-4 lg:max-w-[260px]">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D89B22]/30 bg-[#0D0C09] text-sm font-semibold text-[#FFD66B]">
-              M
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-[#BEB6A3]">ManifestOS</div>
-              <div className="text-sm font-medium">Manifest Studio</div>
-            </div>
-          </div>
+:root {
+  color-scheme: dark;
+  background: #080706;
+  color: #fff8e7;
+}
 
-          <nav className="space-y-2">
-            {stages.map((stage, index) => (
-              <div
-                key={stage}
-                className={`flex items-center gap-3 rounded-2xl border px-3 py-3 ${
-                  index === 0
-                    ? 'border-[#D89B22]/35 bg-[#D89B22]/5 text-[#FFD66B]'
-                    : 'border-transparent bg-transparent text-[#FFF8E7]/85'
-                }`}
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-current text-xs">
-                  {index + 1}
-                </span>
-                <span>{stage}</span>
-              </div>
-            ))}
-          </nav>
-        </aside>
+html {
+  scroll-behavior: smooth;
+}
 
-        <section className="flex-1 rounded-[1.75rem] border border-[#D89B22]/20 bg-[#0D0C09] p-5 md:p-8">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#D89B22]">Current stage</p>
-              <h1 className="mt-2 text-3xl font-semibold">Problem</h1>
-            </div>
-            <button className="rounded-full border border-[#D89B22]/20 px-4 py-2 text-sm text-[#FFF8E7]">
-              Save draft
-            </button>
-          </div>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(217, 155, 34, 0.12), transparent 30%),
+    #080706;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-          <div className="rounded-[1.5rem] border border-[#D89B22]/15 bg-[#12100C] p-5">
-            <label htmlFor="problem" className="mb-3 block text-sm text-[#BEB6A3]">
-              What problem do you wish software could solve?
-            </label>
-            <textarea
-              id="problem"
-              className="h-40 w-full resize-none rounded-2xl border border-[#D89B22]/15 bg-[#080706] p-4 text-base text-[#FFF8E7] outline-none placeholder:text-[#BEB6A3]"
-              placeholder="My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day."
-            />
-          </div>
+* {
+  box-sizing: border-box;
+}
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {[
-              'We keep losing track of which customer approved what.',
-              'My students need a simpler way to remember what goes back to which teacher.',
-              'I want to know whether conditions are good for crabbing before I load the car.',
-              'The clinic keeps re-checking the same follow-up tasks.',
-            ].map((example) => (
-              <button
-                key={example}
-                className="rounded-2xl border border-[#D89B22]/15 bg-[#12100C] p-4 text-left text-sm text-[#BEB6A3] transition hover:border-[#D89B22]/35 hover:text-[#FFF8E7]"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
+textarea,
+button,
+a {
+  transition: all 150ms ease-in-out;
+}
 
-          <div className="mt-8 flex justify-end">
-            <a
-              href="/studio"
-              className="inline-flex items-center justify-center rounded-full border border-[#D89B22]/30 bg-[#D89B22] px-6 py-3 font-medium text-[#080706]"
-            >
-              Continue
-            </a>
-          </div>
-        </section>
-
-        <aside className="w-full rounded-[1.75rem] border border-[#D89B22]/20 bg-[#12100C] p-4 lg:max-w-[280px]">
-          <div className="mb-4 flex items-center justify-between text-sm text-[#BEB6A3]">
-            <span>Summary</span>
-            <span className="rounded-full border border-[#D89B22]/20 px-2 py-1 text-xs uppercase tracking-[0.18em] text-[#FFD66B]">
-              Draft
-            </span>
-          </div>
-
-          <div className="space-y-4 text-sm text-[#FFF8E7]/80">
-            <div className="rounded-2xl border border-[#D89B22]/15 bg-[#080706] p-4">
-              <div className="mb-2 text-[#BEB6A3]">Problem</div>
-              <p>Household reminder workflow for a shared pet-care routine.</p>
-            </div>
-            <div className="rounded-2xl border border-[#D89B22]/15 bg-[#080706] p-4">
-              <div className="mb-2 text-[#BEB6A3]">Likely solution</div>
-              <p>Simple mobile-first shared tracker with status history and reminders.</p>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </main>
-  );
+button,
+input,
+textarea {
+  font: inherit;
 }

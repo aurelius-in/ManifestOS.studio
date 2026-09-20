@@ -1,3 +1,5 @@
+import './globals.css';
+
 export const metadata = {
   title: 'ManifestOS.studio',
   description: 'Problem-first AI software creation studio',

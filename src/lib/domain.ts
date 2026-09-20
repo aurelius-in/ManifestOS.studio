@@ -1,32 +1,36 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+export type Stage = 'problem' | 'understand' | 'envision' | 'blueprint' | 'build' | 'refine' | 'share';
 
-:root {
-  color-scheme: dark;
-  background: #080706;
-  color: #fff8e7;
+export type ProjectStatus = 'draft' | 'discovery' | 'blueprint_ready' | 'building' | 'preview_ready' | 'refining' | 'share_ready';
+
+export interface ProblemBrief {
+  summary: string;
+  affectedUsers: string[];
+  currentWorkaround: string;
+  friction: string;
+  desiredOutcome: string;
+  privacySensitivity: 'low' | 'medium' | 'high';
+  confidence: number;
 }
 
-html {
-  scroll-behavior: smooth;
+export interface SolutionProposal {
+  id: string;
+  title: string;
+  plainLanguageSummary: string;
+  howItWorks: string;
+  whyItFits: string;
+  primaryUsers: string[];
+  mvpFeatures: string[];
+  nonGoals: string[];
+  complexity: 'simple' | 'moderate' | 'collaborative';
+  privacyNotes: string;
+  selected: boolean;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(217, 155, 34, 0.12), transparent 30%),
-    #080706;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-textarea,
-button,
-a {
-  transition: all 150ms ease-in-out;
+export interface DiscoveryQuestion {
+  id: string;
+  question: string;
+  reason?: string;
+  answerType: 'choice' | 'multi' | 'text' | 'boolean';
+  choices?: string[];
+  allowYouDecide?: boolean;
 }

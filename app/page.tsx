@@ -1,3 +1,5 @@
+const defaultProblem = 'My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day.';
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#080706] text-[#FFF8E7]">
@@ -29,28 +31,32 @@ export default function HomePage() {
               You do not need an app idea. Tell us what should be easier. ManifestOS will help imagine the solution, plan it properly, and build it.
             </p>
 
-            <div className="mt-8 rounded-3xl border border-[#D89B22]/20 bg-[#12100C]/80 p-4 shadow-glow">
-              <textarea
-                aria-label="Problem description"
-                className="h-36 w-full resize-none bg-transparent text-base text-[#FFF8E7] outline-none placeholder:text-[#BEB6A3]"
-                placeholder="My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day."
-              />
-            </div>
+            <form action="/studio" method="get" className="mt-8">
+              <div className="rounded-3xl border border-[#D89B22]/20 bg-[#12100C]/80 p-4 shadow-glow">
+                <textarea
+                  name="problem"
+                  aria-label="Problem description"
+                  defaultValue={defaultProblem}
+                  className="h-36 w-full resize-none bg-transparent text-base text-[#FFF8E7] outline-none placeholder:text-[#BEB6A3]"
+                  placeholder="Describe something annoying, repetitive, confusing, difficult, or unnecessarily complicated."
+                />
+              </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <a
-                href="/studio"
-                className="inline-flex items-center justify-center rounded-full border border-[#D89B22]/30 bg-[#D89B22] px-6 py-3 font-medium text-[#080706] transition hover:bg-[#F2C14E]"
-              >
-                Manifest a solution
-              </a>
-              <a
-                href="#how-it-works"
-                className="inline-flex items-center justify-center rounded-full border border-[#D89B22]/20 px-6 py-3 font-medium text-[#FFF8E7] transition hover:border-[#D89B22]/40"
-              >
-                Show me how it works
-              </a>
-            </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full border border-[#D89B22]/30 bg-[#D89B22] px-6 py-3 font-medium text-[#080706] transition hover:bg-[#F2C14E]"
+                >
+                  Manifest a solution
+                </button>
+                <a
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center rounded-full border border-[#D89B22]/20 px-6 py-3 font-medium text-[#FFF8E7] transition hover:border-[#D89B22]/40"
+                >
+                  Show me how it works
+                </a>
+              </div>
+            </form>
           </div>
 
           <div className="rounded-[2rem] border border-[#D89B22]/20 bg-gradient-to-br from-[#12100C] to-[#0D0C09] p-6">
