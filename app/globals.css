@@ -114,10 +114,21 @@ a {
   50% { opacity: 1; transform: scale(1.15) rotate(12deg); }
 }
 
+.brand-mark,
+.brand-mark span,
+.brand-mark img,
+.brand-mark-image {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none;
+  border: 0;
+}
+
 .orbit-frame {
   position: relative;
   display: grid;
   place-items: center;
+  background: transparent;
 }
 
 .orbit-frame__ring {

@@ -1,74 +1,34 @@
-import Link from 'next/link';
 import { BrandMark } from '@/components/brand-mark';
-
-const defaultProblem = 'My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day.';
+import { SiteFooter, SiteHeader, ProblemCapture } from '@/components/site-chrome';
+import { CAMPAIGN_FOLLOW, CAMPAIGN_LINE, DEFAULT_PROBLEM, FRAME, ONE_LINER } from '@/lib/copy';
+import { SEEDED_PROBLEMS } from '@/lib/commons';
 
 const journey = [
-  ['Problem', 'Say what should be easier'],
-  ['Understand', 'Answer a few useful questions'],
-  ['Problem Brief', 'Confirm we heard it right'],
-  ['Envision', 'Pick a solution path'],
-  ['Blueprint', 'Plan before code'],
-  ['Build', 'Generate the app'],
-  ['Preview', 'Try the working result'],
-  ['Refine', 'Change what still feels off'],
-];
-
-const library = [
-  'My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day.',
-  'We keep losing track of which customer approved what.',
-  'My students need a simpler way to remember what goes back to which teacher.',
-  'I want to know whether conditions are good for crabbing before I load the car.',
+  ['Problem', 'Something that should work better becomes a public page'],
+  ['Understand', 'A shared picture of who it hurts and what would help'],
+  ['Existing solutions', 'Search the commons before making another tool'],
+  ['Smallest useful', 'Use one, adapt one, create something different, or skip software'],
+  ['Plan', 'Hidden rigor. You can look, or just continue'],
+  ['Software', 'Only if software is actually useful'],
+  ['Adapt', 'Make this solve someone else\'s version'],
 ];
 
 export default function HomePage() {
   return (
     <main className="min-h-screen">
       <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-10">
-        <header className="mb-10 flex items-center justify-between gap-3">
-          <BrandMark size="nav" priority />
-          <nav className="hidden items-center gap-6 text-sm text-pearl/75 md:flex">
-            <a href="#how-it-works">How it works</a>
-            <a href="#library">Library</a>
-            <a href="#pricing">Pricing</a>
-            <Link href="/studio" className="btn-gold !px-5 !py-2 text-sm">
-              Open studio
-            </Link>
-          </nav>
-          <Link href="/studio" className="btn-gold shrink-0 !px-4 !py-2 text-sm md:hidden">
-            Studio
-          </Link>
-        </header>
+        <SiteHeader />
 
         <section className="grid items-center gap-10 py-6 md:grid-cols-[1.15fr_0.85fr] md:py-10">
           <div>
-            <p className="gold-label mb-4">Problem-first software studio</p>
+            <p className="gold-label mb-4">A problem-solving network</p>
             <h1 className="max-w-xl text-[2rem] font-semibold leading-[1.12] tracking-tight text-pearl sm:text-5xl md:text-6xl">
-              What problem do you wish software could solve?
+              {CAMPAIGN_LINE}
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-champagne">
-              You do not need an app idea. Tell us what should be easier. ManifestOS will help imagine the solution, plan it properly, and build it.
-            </p>
-
-            <form action="/studio" method="get" className="mt-8">
-              <div className="panel p-4 shadow-glow-strong">
-                <textarea
-                  name="problem"
-                  aria-label="Problem description"
-                  defaultValue={defaultProblem}
-                  className="h-36 w-full resize-none bg-transparent text-base text-pearl outline-none placeholder:text-champagne"
-                  placeholder="Describe something annoying, repetitive, confusing, difficult, or unnecessarily complicated."
-                />
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <button type="submit" className="btn-gold">
-                  Manifest a solution
-                </button>
-                <a href="#how-it-works" className="btn-ghost">
-                  Show me how it works
-                </a>
-              </div>
-            </form>
+            <p className="mt-4 text-2xl text-gold-bright">{CAMPAIGN_FOLLOW}</p>
+            <p className="mt-6 max-w-xl text-lg text-champagne">{ONE_LINER}</p>
+            <p className="mt-4 max-w-xl text-sm text-champagne">{FRAME}</p>
+            <ProblemCapture defaultProblem={DEFAULT_PROBLEM} />
           </div>
 
           <div className="relative">
@@ -81,10 +41,10 @@ export default function HomePage() {
               </div>
               <BrandMark size="hero" priority linked={false} />
             </div>
-            <div className="panel relative -mt-6 p-5">
+            <div className="panel relative mt-4 p-5">
               <div className="mb-4 flex items-center justify-between text-sm text-champagne">
-                <span>Studio snapshot</span>
-                <span className="chip">Demo mode</span>
+                <span>How a problem travels</span>
+                <span className="chip">Demo commons</span>
               </div>
               <div className="space-y-2">
                 {journey.slice(0, 5).map(([label, value]) => (
@@ -100,7 +60,9 @@ export default function HomePage() {
 
         <section id="how-it-works" className="py-16">
           <p className="gold-label mb-3">How it works</p>
-          <h2 className="mb-8 text-3xl font-semibold text-pearl">A guided path from a messy problem to a working preview.</h2>
+          <h2 className="mb-8 text-3xl font-semibold text-pearl">
+            Problem, shared understanding, existing solutions, then maybe software.
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {journey.map(([title, copy], index) => (
               <article key={title} className="panel-quiet p-5">
@@ -114,17 +76,23 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="library" className="py-10">
-          <p className="gold-label mb-3">Library</p>
-          <h2 className="mb-8 text-3xl font-semibold text-pearl">Start from a problem people already recognize.</h2>
+        <section id="commons" className="py-10">
+          <p className="gold-label mb-3">The Problem Commons</p>
+          <h2 className="mb-4 text-3xl font-semibold text-pearl">Problems are first-class. Not app ideas.</h2>
+          <p className="mb-8 max-w-2xl text-champagne">
+            A ManifestOS page begins as a lived problem. Other people can say they have it too. These are seeded examples so you can walk the path. They are not a fake crowd.
+          </p>
           <div className="grid gap-4 md:grid-cols-2">
-            {library.map((problem) => (
+            {SEEDED_PROBLEMS.map((problem) => (
               <a
-                key={problem}
-                href={`/studio?problem=${encodeURIComponent(problem)}`}
+                key={problem.slug}
+                href={`/problems/${problem.slug}`}
                 className="panel-quiet p-5 text-left text-champagne hover:border-[rgba(255,213,106,0.35)] hover:text-pearl"
               >
-                {problem}
+                <p className="text-pearl">{problem.statement}</p>
+                <p className="mt-3 text-xs uppercase tracking-[0.18em] text-gold-primary">
+                  {problem.peopleWithThisProblem} in the seeded commons
+                </p>
               </a>
             ))}
           </div>
@@ -132,16 +100,20 @@ export default function HomePage() {
 
         <section id="pricing" className="py-16">
           <div className="panel p-8 md:p-10">
-            <p className="gold-label mb-3">Pricing</p>
-            <h2 className="max-w-xl text-3xl font-semibold text-pearl">The studio is in an open demo.</h2>
+            <p className="gold-label mb-3">Free to solve</p>
+            <h2 className="max-w-xl text-3xl font-semibold text-pearl">
+              Describe a problem, create an ordinary solution, use it, share it, adapt it. Free.
+            </h2>
             <p className="mt-4 max-w-2xl text-champagne">
-              Walk the full path, preview a working app, and refine it. Paid workspaces come later. For now, bring a real problem and see what ManifestOS makes of it.
+              We do not ask for a credit card to begin. We also do not promise unlimited compute forever. If a solution needs help traveling, that is Manifest Boost, later, and optional.
             </p>
-            <Link href="/studio" className="btn-gold mt-8 inline-flex">
-              Open the studio
-            </Link>
+            <a href="/boost" className="btn-ghost mt-8 inline-flex">
+              How Manifest Boost might work
+            </a>
           </div>
         </section>
+
+        <SiteFooter />
       </div>
     </main>
   );

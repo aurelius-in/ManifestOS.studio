@@ -1,88 +1,247 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BrandMark } from '@/components/brand-mark';
 import {
   buildDiscoveryStatusText,
   buildProblemBrief,
-  demoSolutions,
   generateDemoBlueprint,
   generateDiscoveryQuestions,
   generateSampleDiscoveryAnswers,
 } from '@/lib/demo-data';
-import { buildPreviewSrcDoc, generateDemoApp } from '@/lib/generated-app';
-import { BlueprintArtifact, DiscoveryQuestion, GeneratedApp, ProblemBrief, SolutionProposal } from '@/lib/domain';
+import { generateDemoApp } from '@/lib/generated-app';
+import {
+  BlueprintArtifact,
+  ChangeRequest,
+  CommonsSolution,
+  DiscoveryQuestion,
+  GeneratedApp,
+  ProblemBrief,
+  ProjectVersion,
+  SolutionProposal,
+} from '@/lib/domain';
+import { CTA_LABEL, DEFAULT_PROBLEM } from '@/lib/copy';
+import {
+  SEEDED_SOLUTIONS,
+  commonsSolutionToProposal,
+  makeProblemRecord,
+  searchCommons,
+} from '@/lib/commons';
+import { APPROACHES, ApproachOption, nonSoftwarePlan, proposalFromApproach } from '@/lib/smallest';
+import { applyRefinement, createInitialPreviewVersion, restoreVersion, undoVersion } from '@/lib/refine';
+import { recordAdaptation, recordSolutionCreated, rememberSubmittedProblem } from '@/lib/commons-store';
+import {
+  BlueprintView,
+  BuildView,
+  CommonsSearchView,
+  Info,
+  PlanInviteView,
+  RefineView,
+  ResolvedView,
+  SmallestView,
+} from './studio-views';
 
-const defaultProblem = 'My dad sometimes forgets whether he already fed the dog, and multiple family members may visit during the day.';
-const stages = ['Problem', 'Understand', 'Problem Brief', 'Envision', 'Blueprint', 'Build', 'Preview', 'Refine'];
-type FlowStage = 'problem' | 'discovery' | 'brief' | 'solutions' | 'blueprint' | 'build' | 'refine';
+const stages = ['Problem', 'Understand', 'Existing', 'Smallest useful', 'Plan', 'Build', 'Refine', 'Adapt'];
+type FlowStage =
+  | 'problem'
+  | 'discovery'
+  | 'brief'
+  | 'commons'
+  | 'smallest'
+  | 'adapt'
+  | 'plan-invite'
+  | 'blueprint'
+  | 'build'
+  | 'preview'
+  | 'refine'
+  | 'resolved';
 
 const examples = [
+  DEFAULT_PROBLEM,
+  'My daughter has ADHD and keeps leaving completed homework at home.',
   'We keep losing track of which customer approved what.',
-  'My students need a simpler way to remember what goes back to which teacher.',
   'I want to know whether conditions are good for crabbing before I load the car.',
-  'The clinic keeps re-checking the same follow-up tasks.',
 ];
 
 export default function StudioPage() {
   const searchParams = useSearchParams();
-  const initialProblem = searchParams.get('problem')?.trim() || defaultProblem;
+  const initialProblem = searchParams.get('problem')?.trim() || DEFAULT_PROBLEM;
+  const fromSlug = searchParams.get('from');
+  const useId = searchParams.get('use');
+  const adaptId = searchParams.get('adapt');
+
   const [problem, setProblem] = useState(initialProblem);
   const [questions, setQuestions] = useState<DiscoveryQuestion[]>(() => generateDiscoveryQuestions(initialProblem));
   const [answers, setAnswers] = useState<Record<string, string>>(() => generateSampleDiscoveryAnswers(initialProblem));
   const [brief, setBrief] = useState<ProblemBrief | null>(null);
-  const [solutions, setSolutions] = useState<SolutionProposal[]>(demoSolutions);
-  const [selectedSolutionId, setSelectedSolutionId] = useState<string | null>(null);
+  const [selectedSolution, setSelectedSolution] = useState<SolutionProposal | null>(null);
   const [artifacts, setArtifacts] = useState<BlueprintArtifact[]>([]);
   const [app, setApp] = useState<GeneratedApp | null>(null);
   const [flowStage, setFlowStage] = useState<FlowStage>('problem');
   const [isGenerating, setIsGenerating] = useState(false);
   const [buildStep, setBuildStep] = useState(0);
   const [refinement, setRefinement] = useState('');
-  const selectedSolution = solutions.find((solution) => solution.id === selectedSolutionId) || null;
+  const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
+  const [lastRequest, setLastRequest] = useState<ChangeRequest | null>(null);
+  const [versions, setVersions] = useState<ProjectVersion[]>([]);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+  const [approachId, setApproachId] = useState<ApproachOption['id'] | null>(null);
+  const [adaptNote, setAdaptNote] = useState('');
+  const [adaptTarget, setAdaptTarget] = useState<CommonsSolution | null>(
+    () => SEEDED_SOLUTIONS.find((item) => item.id === adaptId) || null,
+  );
+  const [nonSoftwareSteps, setNonSoftwareSteps] = useState<string[] | null>(null);
+  const [countedSolution, setCountedSolution] = useState(false);
+
+  const record = useMemo(() => makeProblemRecord(problem), [problem]);
+  const search = useMemo(() => searchCommons(problem), [problem]);
+  const matches = search.matches;
+  const hasExisting = matches.some((match) => match.solutions.length > 0);
   const statusText = useMemo(() => buildDiscoveryStatusText(problem, answers), [problem, answers]);
+  const approaches = APPROACHES.filter((item) => !item.needsExisting || hasExisting);
+
   const activeStage =
     flowStage === 'problem' ? 0
-      : flowStage === 'discovery' ? 1
-        : flowStage === 'brief' ? 2
-          : flowStage === 'solutions' ? 3
-            : flowStage === 'blueprint' ? 4
-              : flowStage === 'build' ? (isGenerating || !app ? 5 : 6)
-                : 7;
+      : flowStage === 'discovery' || flowStage === 'brief' ? 1
+        : flowStage === 'commons' ? 2
+          : flowStage === 'smallest' || flowStage === 'adapt' ? 3
+            : flowStage === 'plan-invite' || flowStage === 'blueprint' ? 4
+              : flowStage === 'build' ? 5
+                : flowStage === 'preview' || flowStage === 'refine' ? 6
+                  : 7;
+
+  const stageTitle =
+    flowStage === 'problem' ? 'Problem'
+      : flowStage === 'discovery' ? 'Understand'
+        : flowStage === 'brief' ? 'Shared understanding'
+          : flowStage === 'commons' ? 'Existing solutions'
+            : flowStage === 'smallest' ? 'Smallest useful solution'
+              : flowStage === 'adapt' ? 'Your version'
+                : flowStage === 'plan-invite' || flowStage === 'blueprint' ? 'Plan'
+                  : flowStage === 'build' ? 'Build'
+                    : flowStage === 'preview' ? 'Preview'
+                      : flowStage === 'refine' ? 'Refine'
+                        : 'Adapt';
 
   function startDiscovery() {
+    rememberSubmittedProblem(problem);
     setQuestions(generateDiscoveryQuestions(problem));
     setAnswers(generateSampleDiscoveryAnswers(problem));
     setFlowStage('discovery');
   }
+
   function generateBrief() {
     setBrief(buildProblemBrief(problem, answers));
     setFlowStage('brief');
   }
-  function showSolutions() {
+
+  function goCommons() {
+    if (useId) {
+      const found = SEEDED_SOLUTIONS.find((item) => item.id === useId);
+      if (found) {
+        useExisting(found);
+        return;
+      }
+    }
+    if (adaptId) {
+      const found = SEEDED_SOLUTIONS.find((item) => item.id === adaptId);
+      if (found) {
+        beginAdapt(found);
+        return;
+      }
+    }
+    setFlowStage('commons');
+  }
+
+  function useExisting(solution: CommonsSolution) {
+    const proposal = commonsSolutionToProposal(solution);
+    setSelectedSolution(proposal);
+    markCreated();
+    if (solution.kind === 'no_software') {
+      setNonSoftwareSteps(nonSoftwarePlan(problem));
+      setFlowStage('resolved');
+      return;
+    }
+    setNonSoftwareSteps(null);
+    const generated = generateDemoApp(proposal);
+    setApp(generated);
+    setFlowStage('preview');
+  }
+
+  function beginAdapt(solution: CommonsSolution) {
+    setAdaptTarget(solution);
+    setFlowStage('adapt');
+  }
+
+  function applyAdapt() {
+    if (!adaptTarget) return;
+    const proposal = commonsSolutionToProposal(adaptTarget, true);
+    const note = adaptNote.trim();
+    const nextProposal = {
+      ...proposal,
+      plainLanguageSummary: note
+        ? `${proposal.plainLanguageSummary} What is different here: ${note}`
+        : proposal.plainLanguageSummary,
+      howItWorks: note ? `${proposal.howItWorks} Adapted around: ${note}` : proposal.howItWorks,
+    };
+    setSelectedSolution(nextProposal);
+    recordAdaptation(record.slug, adaptTarget.id, note || 'A slightly different situation.');
+    if (adaptTarget.kind === 'no_software') {
+      setNonSoftwareSteps(nonSoftwarePlan(problem));
+      markCreated();
+      setFlowStage('resolved');
+      return;
+    }
+    preparePlan(nextProposal);
+  }
+
+  function chooseApproach(id: ApproachOption['id']) {
+    setApproachId(id);
+  }
+
+  function continueApproach() {
+    if (!approachId) return;
+    if (approachId === 'use_existing') {
+      const first = matches.flatMap((match) => match.solutions)[0];
+      if (first) useExisting(first);
+      return;
+    }
+    if (approachId === 'adapt_existing') {
+      const first = matches.flatMap((match) => match.solutions)[0];
+      if (first) beginAdapt(first);
+      return;
+    }
+    const existingTitle = matches.flatMap((match) => match.solutions)[0]?.title;
+    const proposal = proposalFromApproach(approachId, problem, existingTitle);
+    setSelectedSolution(proposal);
+    if (approachId === 'no_software' || !proposal.requiresSoftware) {
+      setNonSoftwareSteps(nonSoftwarePlan(problem));
+      markCreated();
+      setFlowStage('resolved');
+      return;
+    }
+    preparePlan(proposal);
+  }
+
+  function preparePlan(explicit?: SolutionProposal) {
+    const solution = explicit || selectedSolution || proposalFromApproach(approachId || 'tiny_app', problem);
     if (!brief) return;
-    setSolutions(demoSolutions.map((solution, index) => ({ ...solution, selected: index === 0 })));
-    setSelectedSolutionId(demoSolutions[0].id);
-    setFlowStage('solutions');
-  }
-  function chooseSolution(id: string) {
-    setSelectedSolutionId(id);
-    setSolutions((current) => current.map((solution) => ({ ...solution, selected: solution.id === id })));
-  }
-  function createBlueprint() {
-    const solution = solutions.find((item) => item.id === (selectedSolutionId || solutions.find((item) => item.selected)?.id)) || solutions[0];
-    if (!brief || !solution) return;
-    setSelectedSolutionId(solution.id);
+    setSelectedSolution(solution);
     setIsGenerating(true);
     window.setTimeout(() => {
       setArtifacts(generateDemoBlueprint(solution, brief));
       setIsGenerating(false);
-      setFlowStage('blueprint');
-    }, 650);
+      setFlowStage('plan-invite');
+    }, 500);
   }
+
   function startBuild() {
-    if (!selectedSolution) return;
+    const solution = selectedSolution;
+    if (!solution || !brief) return;
+    const currentArtifacts = artifacts.length ? artifacts : generateDemoBlueprint(solution, brief);
+    setArtifacts(currentArtifacts);
     setFlowStage('build');
     setBuildStep(0);
     setIsGenerating(true);
@@ -90,23 +249,83 @@ export default function StudioPage() {
       setBuildStep((step) => {
         if (step >= 4) {
           window.clearInterval(timer);
-          setApp(generateDemoApp(selectedSolution));
+          const generated = generateDemoApp(solution, changeRequests);
+          setApp(generated);
+          setVersions([createInitialPreviewVersion(currentArtifacts, generated, solution)]);
+          setCurrentVersionIndex(0);
           setIsGenerating(false);
+          setFlowStage('preview');
+          markCreated();
           return 4;
         }
         return step + 1;
       });
-    }, 500);
+    }, 450);
+  }
+
+  function markCreated() {
+    if (countedSolution) return;
+    recordSolutionCreated();
+    setCountedSolution(true);
+  }
+
+  function applyRefine() {
+    const solution = selectedSolution;
+    const currentApp = app;
+    if (!solution || !currentApp || !refinement.trim()) return;
+    setIsGenerating(true);
+    window.setTimeout(() => {
+      const result = applyRefinement({
+        text: refinement,
+        artifacts,
+        app: currentApp,
+        solution,
+        changeRequests,
+        versions,
+        currentVersionIndex,
+      });
+      setLastRequest(result.request);
+      setArtifacts(result.artifacts);
+      setApp(result.app);
+      setChangeRequests(result.changeRequests);
+      setVersions(result.versions);
+      setCurrentVersionIndex(result.currentVersionIndex);
+      setRefinement('');
+      setIsGenerating(false);
+      setFlowStage('preview');
+    }, 450);
+  }
+
+  function restoreAt(index: number) {
+    const restored = restoreVersion(versions, index);
+    if (!restored) return;
+    setArtifacts(restored.artifacts);
+    setApp(restored.app);
+    setSelectedSolution(restored.solution);
+    setChangeRequests(restored.changeRequests);
+    setCurrentVersionIndex(restored.currentVersionIndex);
+    setLastRequest(versions[index]?.changeRequest || null);
+    setFlowStage('preview');
+  }
+
+  function undoRefine() {
+    const restored = undoVersion(versions, currentVersionIndex);
+    if (!restored) return;
+    restoreAt(restored.currentVersionIndex);
   }
 
   return (
     <main className="min-h-screen text-pearl">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-5 lg:flex-row lg:py-6">
-        <aside className="panel w-full p-4 lg:max-w-[280px]">
-          <div className="mb-5 flex items-center justify-center lg:justify-start">
+        <aside className="w-full bg-transparent lg:max-w-[280px]">
+          <div className="mb-5 flex items-center justify-center bg-transparent lg:justify-start">
             <BrandMark size="compact" priority />
           </div>
-          <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:space-y-2 lg:overflow-visible" aria-label="Journey stages">
+          <nav className="mb-4 hidden gap-3 px-1 text-sm text-champagne md:flex">
+            <Link href="/manifesto" className="hover:text-pearl">Manifesto</Link>
+            <Link href="/commons" className="hover:text-pearl">Commons</Link>
+          </nav>
+          <nav className="panel flex gap-2 overflow-x-auto p-4 pb-1 lg:flex-col lg:space-y-2 lg:overflow-visible" aria-label="Journey stages">
             {stages.map((stage, index) => (
               <div
                 key={stage}
@@ -131,32 +350,27 @@ export default function StudioPage() {
           <div className="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="gold-label">Current stage</p>
-              <h1 className="mt-2 text-3xl font-semibold">
-                {flowStage === 'problem' ? 'Problem'
-                  : flowStage === 'discovery' ? 'Understand'
-                    : flowStage === 'brief' ? 'Problem Brief'
-                      : flowStage === 'solutions' ? 'Envision'
-                        : flowStage === 'blueprint' ? 'Blueprint'
-                          : flowStage === 'build' ? (isGenerating || !app ? 'Build' : 'Preview')
-                            : 'Refine'}
-              </h1>
+              <h1 className="mt-2 text-3xl font-semibold">{stageTitle}</h1>
             </div>
-            <span className="chip">Demo mode</span>
+            <span className="chip">Demo commons</span>
           </div>
 
           {flowStage === 'problem' && (
             <>
               <div className="panel-quiet p-5">
                 <label htmlFor="problem" className="mb-3 block text-sm text-champagne">
-                  What problem do you wish software could solve?
+                  {fromSlug ? 'This problem is already in the commons.' : CTA_LABEL}
                 </label>
                 <textarea
                   id="problem"
                   value={problem}
                   onChange={(event) => setProblem(event.target.value)}
                   className="h-40 w-full resize-none rounded-2xl border border-[rgba(232,176,32,0.15)] bg-void p-4 text-base text-pearl outline-none placeholder:text-champagne"
-                  placeholder="Describe something annoying, repetitive, confusing, difficult, or unnecessarily complicated."
+                  placeholder="Describe something that should work better."
                 />
+                <p className="mt-3 text-sm text-champagne">
+                  Permanent page: /problems/{record.slug}
+                </p>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {examples.map((example) => (
@@ -172,7 +386,7 @@ export default function StudioPage() {
               </div>
               <div className="mt-8 flex justify-end">
                 <button type="button" onClick={startDiscovery} disabled={!problem.trim()} className="btn-gold">
-                  Start discovery
+                  Help understand this
                 </button>
               </div>
             </>
@@ -230,7 +444,7 @@ export default function StudioPage() {
               </div>
               <div className="flex justify-end">
                 <button type="button" onClick={generateBrief} className="btn-gold">
-                  Confirm Problem Brief
+                  Show the shared understanding
                 </button>
               </div>
             </div>
@@ -239,12 +453,12 @@ export default function StudioPage() {
           {flowStage === 'brief' && brief && (
             <div className="space-y-6">
               <div className="panel-quiet p-5">
-                <p className="gold-label">Problem Brief</p>
+                <p className="gold-label">Shared understanding</p>
                 <h2 className="mt-3 text-2xl font-semibold">{brief.summary}</h2>
                 <p className="mt-3 text-sm text-champagne">Did I understand the problem correctly?</p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <Info title="Affected users">
+                <Info title="Affected people">
                   <ul className="list-disc space-y-2 pl-5">
                     {brief.affectedUsers.map((user) => (
                       <li key={user}>{user}</li>
@@ -257,114 +471,104 @@ export default function StudioPage() {
               </div>
               <div className="flex justify-between">
                 <button type="button" onClick={() => setFlowStage('discovery')} className="btn-ghost">
-                  Edit discovery
+                  Edit understanding
                 </button>
-                <button type="button" onClick={showSolutions} className="btn-gold">
-                  Yes, show me solutions
+                <button type="button" onClick={goCommons} className="btn-gold">
+                  Search the commons
                 </button>
               </div>
             </div>
           )}
 
-          {flowStage === 'solutions' && (
+          {flowStage === 'commons' && (
+            <CommonsSearchView
+              problem={record}
+              matches={matches}
+              onUse={useExisting}
+              onAdapt={beginAdapt}
+              onCreateDifferent={() => setFlowStage('smallest')}
+            />
+          )}
+
+          {flowStage === 'smallest' && (
+            <SmallestView
+              approaches={approaches}
+              selectedId={approachId}
+              onSelect={chooseApproach}
+              onContinue={continueApproach}
+            />
+          )}
+
+          {flowStage === 'adapt' && adaptTarget && (
             <div className="space-y-6">
-              <p className="text-lg">Here are a few ways to solve the problem. Start small unless you need more.</p>
-              <div className="grid gap-4">
-                {solutions.map((solution) => (
-                  <button
-                    key={solution.id}
-                    type="button"
-                    onClick={() => chooseSolution(solution.id)}
-                    className={`rounded-[1.5rem] border p-5 text-left ${
-                      solution.selected
-                        ? 'border-[rgba(255,213,106,0.5)] bg-[rgba(232,176,32,0.12)] shadow-glow'
-                        : 'border-[rgba(232,176,32,0.15)] bg-panel'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <span className="gold-label">{solution.complexity}</span>
-                        <h2 className="mt-2 text-2xl font-semibold">{solution.title}</h2>
-                      </div>
-                      <span className="chip">{solution.selected ? 'Selected' : 'Choose this'}</span>
-                    </div>
-                    <p className="mt-3 text-champagne">{solution.plainLanguageSummary}</p>
-                    <p className="mt-3 text-sm">{solution.howItWorks}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {solution.mvpFeatures.map((feature) => (
-                        <span key={feature} className="rounded-full bg-void px-3 py-1 text-xs text-champagne">
-                          {feature}
-                        </span>
-                      ))}
-                    </div>
-                  </button>
-                ))}
+              <div className="panel-quiet p-5">
+                <p className="gold-label">Make this solve my version</p>
+                <h2 className="mt-3 text-2xl font-semibold">{adaptTarget.title}</h2>
+                <p className="mt-2 text-champagne">{adaptTarget.summary}</p>
               </div>
+              <label className="block">
+                <span className="mb-3 block text-sm text-champagne">What is different about your situation?</span>
+                <textarea
+                  value={adaptNote}
+                  onChange={(event) => setAdaptNote(event.target.value)}
+                  className="h-32 w-full rounded-2xl border border-[rgba(232,176,32,0.15)] bg-void p-4 outline-none"
+                  placeholder="Dad lives alone. Mom also needs medication reminders. One family has four siblings. A caregiver needs Spanish."
+                />
+              </label>
               <div className="flex justify-end">
-                <button type="button" onClick={createBlueprint} disabled={isGenerating} className="btn-gold">
-                  {isGenerating ? 'Designing your solution…' : 'Create Blueprint'}
+                <button type="button" className="btn-gold" onClick={applyAdapt}>
+                  Adapt around that
                 </button>
               </div>
             </div>
+          )}
+
+          {flowStage === 'plan-invite' && (
+            <PlanInviteView
+              onShow={() => setFlowStage('blueprint')}
+              onSkip={startBuild}
+            />
           )}
 
           {flowStage === 'blueprint' && selectedSolution && (
-            <div className="space-y-6">
-              <div className="panel-quiet p-5">
-                <p className="gold-label">Blueprint ready</p>
-                <h2 className="mt-3 text-2xl font-semibold">The build now has a plan to follow.</h2>
-                <p className="mt-2 text-champagne">{selectedSolution.title} is based on the current Problem Brief.</p>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                {artifacts.map((artifact, index) => (
-                  <details key={artifact.id} open={index < 2} className="rounded-2xl border border-[rgba(232,176,32,0.15)] bg-panel p-4">
-                    <summary className="cursor-pointer list-none">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="font-medium">{index + 1}. {artifact.title}</span>
-                        <span className="text-xs text-gold-bright">Ready</span>
-                      </div>
-                      <p className="mt-2 text-sm text-champagne">{artifact.plainLanguageSummary}</p>
-                    </summary>
-                    <div className="mt-4 border-t border-[rgba(232,176,32,0.1)] pt-4 text-sm text-pearl/80">
-                      {artifact.technicalDetail}
-                    </div>
-                  </details>
-                ))}
-              </div>
-              <div className="flex justify-end">
-                <button type="button" onClick={startBuild} className="btn-gold">
-                  Build from Blueprint
-                </button>
-              </div>
-            </div>
+            <BlueprintView artifacts={artifacts} solution={selectedSolution} onBuild={startBuild} />
           )}
 
-          {flowStage === 'build' && (
-            <BuildView isGenerating={isGenerating} buildStep={buildStep} app={app} onRefine={() => setFlowStage('refine')} />
+          {(flowStage === 'build' || flowStage === 'preview') && (
+            <BuildView
+              isGenerating={isGenerating}
+              buildStep={buildStep}
+              app={app}
+              versionLabel={versions[currentVersionIndex]?.label}
+              onRefine={() => setFlowStage('refine')}
+              onShare={() => setFlowStage('resolved')}
+            />
           )}
 
-          {flowStage === 'refine' && (
-            <div className="space-y-6">
-              <div>
-                <p className="gold-label">Refine</p>
-                <h2 className="mt-2 text-2xl font-semibold">What would you like to change?</h2>
-                <p className="mt-2 text-champagne">ManifestOS will decide whether this changes the plan before rebuilding.</p>
-              </div>
-              <textarea
-                value={refinement}
-                onChange={(event) => setRefinement(event.target.value)}
-                className="h-32 w-full rounded-2xl border border-[rgba(232,176,32,0.15)] bg-panel p-4 outline-none"
-                placeholder="For example: make the main button even larger."
-              />
-              <div className="flex justify-between">
-                <button type="button" onClick={() => setFlowStage('build')} className="btn-ghost">
-                  Back to preview
-                </button>
-                <button type="button" onClick={() => setFlowStage('build')} disabled={!refinement.trim()} className="btn-gold">
-                  Apply change
-                </button>
-              </div>
-            </div>
+          {flowStage === 'refine' && app && (
+            <RefineView
+              refinement={refinement}
+              onRefinementChange={setRefinement}
+              isApplying={isGenerating}
+              lastRequest={lastRequest}
+              artifacts={artifacts}
+              versions={versions}
+              currentVersionIndex={currentVersionIndex}
+              onApply={applyRefine}
+              onUndo={undoRefine}
+              onRestore={restoreAt}
+              onBackToPreview={() => setFlowStage('preview')}
+            />
+          )}
+
+          {flowStage === 'resolved' && (
+            <ResolvedView
+              problem={problem}
+              brief={brief}
+              solution={selectedSolution}
+              steps={nonSoftwareSteps || undefined}
+              software={Boolean(selectedSolution?.requiresSoftware)}
+            />
           )}
         </section>
 
@@ -377,92 +581,17 @@ export default function StudioPage() {
             <div className="panel-quiet p-4">
               <div className="mb-2 text-champagne">Problem</div>
               <p>{problem}</p>
+              <a className="mt-3 inline-block text-gold-bright" href={`/problems/${record.slug}?q=${encodeURIComponent(problem)}`}>
+                Open problem page
+              </a>
             </div>
             <div className="panel-quiet p-4">
               <div className="mb-2 text-champagne">Direction</div>
-              <p>{selectedSolution?.title || brief?.desiredOutcome || 'We will find the smallest useful solution.'}</p>
+              <p>{selectedSolution?.title || brief?.desiredOutcome || 'Find the smallest useful solution. Software is optional.'}</p>
             </div>
           </div>
         </aside>
       </div>
     </main>
-  );
-}
-
-function BuildView({
-  isGenerating,
-  buildStep,
-  app,
-  onRefine,
-}: {
-  isGenerating: boolean;
-  buildStep: number;
-  app: GeneratedApp | null;
-  onRefine: () => void;
-}) {
-  const steps = [
-    'Setting up the foundation',
-    'Creating the information your app needs to remember',
-    'Building the main workflow',
-    'Checking for mistakes',
-    'Getting your preview ready',
-  ];
-  return (
-    <div className="space-y-6">
-      <div className="panel-quiet p-5">
-        <p className="gold-label">{isGenerating ? 'Making it real' : 'It exists.'}</p>
-        <h2 className="mt-3 text-3xl font-semibold">
-          {isGenerating ? steps[buildStep] : 'Your working preview is ready.'}
-        </h2>
-        <p className="mt-2 text-champagne">
-          {isGenerating ? 'The build is following the Blueprint task graph.' : 'This preview was generated from the current artifact snapshot.'}
-        </p>
-      </div>
-      {isGenerating ? (
-        <div className="space-y-3">
-          {steps.map((step, index) => (
-            <div
-              key={step}
-              className={`rounded-2xl border p-4 ${
-                index <= buildStep
-                  ? 'border-[rgba(255,213,106,0.35)] bg-[rgba(232,176,32,0.1)] text-gold-bright'
-                  : 'border-[rgba(232,176,32,0.1)] bg-panel text-champagne'
-              }`}
-            >
-              {index < buildStep ? '✓ ' : index === buildStep ? '→ ' : '○ '}
-              {step}
-            </div>
-          ))}
-        </div>
-      ) : app ? (
-        <>
-          <div className="overflow-hidden rounded-[1.5rem] border border-[rgba(255,213,106,0.28)] bg-void shadow-glow">
-            <div className="flex items-center justify-between bg-[rgba(20,17,12,0.95)] px-4 py-3 text-sm">
-              <span className="text-pearl">Live preview · {app.name}</span>
-              <span className="text-gold-bright">Phone</span>
-            </div>
-            <iframe
-              title={`${app.name} preview`}
-              srcDoc={buildPreviewSrcDoc(app)}
-              className="h-[520px] w-full border-0 bg-void"
-            />
-          </div>
-          <div className="flex justify-end">
-            <button type="button" onClick={onRefine} className="btn-gold">
-              Change something
-            </button>
-          </div>
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function Info({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="panel-quiet p-5">
-      <h3 className="text-sm uppercase tracking-[0.18em] text-champagne">{title}</h3>
-      <div className="mt-3">{children}</div>
-    </div>
   );
 }

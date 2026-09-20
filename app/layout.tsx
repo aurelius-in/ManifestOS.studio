@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     default: 'ManifestOS.studio',
     template: '%s · ManifestOS.studio',
   },
-  description: 'Tell us the problem. ManifestOS helps you imagine, plan, and build the software that makes it easier.',
+  description: 'ManifestOS is a free problem-solving network. Don\'t bring us an app idea. Bring us a problem.',
   icons: {
     icon: [{ url: '/logo.png', type: 'image/png' }],
     apple: '/logo.png',
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     url: 'https://manifestos.studio',
     siteName: 'ManifestOS.studio',
     title: 'ManifestOS.studio',
-    description: 'Tell us the problem. ManifestOS helps you imagine, plan, and build the software that makes it easier.',
+    description: 'ManifestOS is a free problem-solving network. Don\'t bring us an app idea. Bring us a problem.',
     images: [{ url: '/logo.png', width: 1254, height: 1254, alt: 'ManifestOS.studio' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ManifestOS.studio',
-    description: 'Tell us the problem. ManifestOS helps you imagine, plan, and build the software that makes it easier.',
+    description: 'ManifestOS is a free problem-solving network. Don\'t bring us an app idea. Bring us a problem.',
     images: ['/logo.png'],
   },
 };
