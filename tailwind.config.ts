@@ -5,21 +5,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        obsidian: '#080706',
-        ink: '#0D0C09',
+        void: '#050403',
+        obsidian: '#0A0805',
+        panel: '#14110C',
         gold: {
-          200: '#F2C14E',
-          400: '#D89B22',
-          500: '#FFD66B',
+          star: '#FFF1B8',
+          bright: '#FFD56A',
+          primary: '#E8B020',
+          deep: '#C49218',
+          bronze: '#8A6910',
         },
-        ivory: '#FFF8E7',
-        champagne: '#BEB6A3',
+        pearl: '#F6F0E4',
+        champagne: '#C4B59A',
       },
       boxShadow: {
-        glow: '0 0 35px rgba(242, 193, 78, 0.18)',
+        glow: '0 0 40px rgba(232, 176, 32, 0.22)',
+        'glow-strong': '0 0 55px rgba(255, 213, 106, 0.32)',
       },
-      borderRadius: {
-        xl: '1.25rem',
+      fontFamily: {
+        sans: ['var(--font-outfit)', 'Arial', 'Helvetica', 'sans-serif'],
       },
     },
   },
