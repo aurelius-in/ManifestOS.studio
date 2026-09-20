@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from 'react';
-import { buildDiscoveryStatusText, buildProblemBrief, demoSolutions, generateDemoBlueprint, generateDemoBuildTasks, generateDiscoveryQuestions, generateSampleDiscoveryAnswers } from '@/lib/demo-data';
+import { useSearchParams } from 'next/navigation';
+import { buildDiscoveryStatusText, buildProblemBrief, demoSolutions, generateDemoBlueprint, generateDiscoveryQuestions, generateSampleDiscoveryAnswers } from '@/lib/demo-data';
 import { generateDemoApp } from '@/lib/generated-app';
 import { BlueprintArtifact, DiscoveryQuestion, GeneratedApp, ProblemBrief, SolutionProposal } from '@/lib/domain';
 
@@ -9,8 +10,9 @@ const defaultProblem = 'My dad sometimes forgets whether he already fed the dog,
 const stages = ['Problem', 'Understand', 'Envision', 'Blueprint', 'Build', 'Refine', 'Share'];
 type FlowStage = 'problem' | 'discovery' | 'brief' | 'solutions' | 'blueprint' | 'build' | 'refine';
 
-export default function StudioPage({ searchParams }: { searchParams?: { problem?: string } }) {
-  const initialProblem = searchParams?.problem?.trim() || defaultProblem;
+export default function StudioPage() {
+  const searchParams = useSearchParams();
+  const initialProblem = searchParams.get('problem')?.trim() || defaultProblem;
   const [problem, setProblem] = useState(initialProblem);
   const [questions, setQuestions] = useState<DiscoveryQuestion[]>(() => generateDiscoveryQuestions(initialProblem));
   const [answers, setAnswers] = useState<Record<string, string>>(() => generateSampleDiscoveryAnswers(initialProblem));
