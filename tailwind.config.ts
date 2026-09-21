@@ -5,8 +5,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        void: '#050403',
-        obsidian: '#0A0805',
+        void: '#010100',
+        obsidian: '#070604',
         panel: '#14110C',
         gold: {
           star: '#FFF1B8',

@@ -39,6 +39,7 @@ export function SiteFooter() {
       <div className="mt-6 flex flex-wrap gap-4 text-sm text-pearl/75">
         <Link href="/manifesto" className="hover:text-pearl">Manifesto</Link>
         <Link href="/commons" className="hover:text-pearl">The Problem Commons</Link>
+        <Link href="/essay" className="hover:text-pearl">One problem, a family of solutions</Link>
         <Link href="/boost" className="hover:text-pearl">Manifest Boost</Link>
         <Link href="/you" className="hover:text-pearl">You</Link>
         <Link href="/studio" className="hover:text-pearl">Studio</Link>

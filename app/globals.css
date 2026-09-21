@@ -4,9 +4,9 @@
 
 :root {
   color-scheme: dark;
-  --void: #050403;
-  --obsidian: #0a0805;
-  --panel: #14110c;
+  --void: #010100;
+  --obsidian: #070604;
+  --panel: #12100b;
   --gold-star: #fff1b8;
   --gold-bright: #ffd56a;
   --gold-primary: #e8b020;
@@ -57,27 +57,31 @@ a {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(28, 20, 8, 0.55) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 45% at 78% 28%, rgba(18, 12, 4, 0.4) 0%, transparent 62%),
+    #010100;
 }
 
 .magical-sky__glow {
   position: absolute;
   left: 50%;
-  top: -12%;
-  width: min(90vw, 980px);
-  height: min(90vw, 980px);
+  top: -22%;
+  width: min(72vw, 740px);
+  height: min(72vw, 740px);
   transform: translateX(-50%);
   background:
-    radial-gradient(circle at 50% 42%, rgba(255, 241, 184, 0.2) 0%, rgba(232, 176, 32, 0.12) 26%, rgba(196, 146, 24, 0.05) 48%, transparent 70%);
+    radial-gradient(circle at 50% 46%, rgba(232, 176, 32, 0.055) 0%, rgba(196, 146, 24, 0.028) 34%, rgba(12, 8, 3, 0) 66%);
 }
 
 .magical-sky__floor {
   position: absolute;
   left: 50%;
-  bottom: -18%;
-  width: 90vw;
-  height: 42vh;
+  bottom: -22%;
+  width: 80vw;
+  height: 36vh;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgba(232, 176, 32, 0.14), transparent 72%);
+  background: radial-gradient(ellipse at center, rgba(232, 176, 32, 0.05), transparent 74%);
 }
 
 .magical-sky__dust {
@@ -124,6 +128,52 @@ a {
   border: 0;
 }
 
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-mark::before {
+  content: '';
+  position: absolute;
+  inset: 18%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 213, 106, 0.07) 0%, rgba(232, 176, 32, 0.03) 34%, transparent 70%);
+}
+
+.brand-mark--hero::before {
+  inset: 16%;
+  background: radial-gradient(circle at 50% 40%, rgba(255, 213, 106, 0.08) 0%, rgba(232, 176, 32, 0.035) 30%, transparent 68%);
+}
+
+.brand-mark-image {
+  position: relative;
+  z-index: 1;
+  mix-blend-mode: screen;
+  mix-blend-mode: plus-lighter;
+  filter: drop-shadow(0 0 14px rgba(232, 176, 32, 0.14));
+}
+
+.constellation-figure,
+.constellation-figure img {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none;
+  border: 0;
+}
+
+.constellation-figure {
+  position: relative;
+}
+
+.constellation-figure-image {
+  position: relative;
+  filter: drop-shadow(0 0 18px rgba(232, 176, 32, 0.1));
+}
+
 .orbit-frame {
   position: relative;
   display: grid;
@@ -135,6 +185,7 @@ a {
   position: absolute;
   inset: 4%;
   pointer-events: none;
+  opacity: 0.38;
 }
 
 .orbit-frame__spin {

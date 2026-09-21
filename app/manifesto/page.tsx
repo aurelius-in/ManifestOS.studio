@@ -61,6 +61,12 @@ export default function ManifestoPage() {
             );
           })}
         </article>
+        <p className="pb-8 text-lg text-champagne">
+          The commons is a family of solutions, not a catalog of apps.{' '}
+          <Link href="/essay" className="text-gold-bright hover:text-pearl">
+            One problem. A family of solutions.
+          </Link>
+        </p>
         <div className="panel p-6">
           <p className="gold-label mb-3">Invitation</p>
           <h2 className="text-2xl font-semibold text-pearl">{CTA_LABEL}</h2>

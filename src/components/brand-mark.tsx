@@ -18,23 +18,25 @@ export function BrandMark({
 }) {
   const image = (
     <Image
-      src="/logo.png"
+      src="/logo.png?v=night"
       alt="ManifestOS.studio"
       width={1254}
       height={1254}
       priority={priority}
       unoptimized
-      className={`brand-mark-image bg-transparent object-contain drop-shadow-[0_0_28px_rgba(255,213,106,0.38)] ${sizes[size]}`}
+      className={`brand-mark-image bg-transparent object-contain ${sizes[size]}`}
       style={{ backgroundColor: 'transparent' }}
     />
   );
 
+  const markClass = `brand-mark brand-mark--${size} inline-flex bg-transparent`;
+
   if (!linked) {
-    return <span className="brand-mark inline-flex bg-transparent">{image}</span>;
+    return <span className={markClass}>{image}</span>;
   }
 
   return (
-    <Link href="/" className="brand-mark inline-flex shrink-0 bg-transparent" aria-label="ManifestOS.studio home">
+    <Link href="/" className={`${markClass} shrink-0`} aria-label="ManifestOS.studio home">
       {image}
     </Link>
   );

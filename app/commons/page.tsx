@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { COMMONS_HONESTY } from '@/lib/copy';
 import { SEEDED_PROBLEMS, SEEDED_SOLUTIONS } from '@/lib/commons';
@@ -18,6 +19,9 @@ export default function CommonsPage() {
           A shared map of problems, not an app store.
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-champagne">{COMMONS_HONESTY}</p>
+        <Link href="/essay" className="mt-5 inline-block text-sm text-gold-bright hover:text-pearl">
+          One problem. A family of solutions.
+        </Link>
 
         <div className="mt-10 grid gap-4">
           {SEEDED_PROBLEMS.map((problem) => {
