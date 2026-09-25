@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
+import { ActivityTracker } from '@/components/activity-tracker';
 import { MagicalSky } from '@/components/magical-sky';
 import './globals.css';
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={outfit.variable}>
       <body className={`${outfit.className} bg-void text-pearl antialiased`}>
         <MagicalSky />
+        <ActivityTracker />
         <div className="relative z-10">{children}</div>
       </body>
     </html>

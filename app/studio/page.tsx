@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BrandMark } from '@/components/brand-mark';
@@ -22,6 +22,7 @@ import {
   ProjectVersion,
   SolutionProposal,
 } from '@/lib/domain';
+import { trackActivity } from '@/lib/activity-client';
 import { CTA_LABEL, DEFAULT_PROBLEM } from '@/lib/copy';
 import {
   SEEDED_SOLUTIONS,
@@ -80,6 +81,18 @@ export default function StudioPage() {
   const [artifacts, setArtifacts] = useState<BlueprintArtifact[]>([]);
   const [app, setApp] = useState<GeneratedApp | null>(null);
   const [flowStage, setFlowStage] = useState<FlowStage>('problem');
+  const stageStarted = useRef(Date.now());
+  const stagePrev = useRef<FlowStage>('problem');
+
+  useEffect(() => {
+    const now = Date.now();
+    if (stagePrev.current !== flowStage) {
+      trackActivity('studio_stage_leave', { stage: stagePrev.current }, now - stageStarted.current);
+      stageStarted.current = now;
+      stagePrev.current = flowStage;
+    }
+    trackActivity('studio_stage', { stage: flowStage });
+  }, [flowStage]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [buildStep, setBuildStep] = useState(0);
   const [refinement, setRefinement] = useState('');

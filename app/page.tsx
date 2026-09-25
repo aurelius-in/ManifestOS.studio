@@ -19,7 +19,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-10">
         <SiteHeader />
 
-        <section className="grid items-center gap-10 py-6 md:grid-cols-[1.15fr_0.85fr] md:py-10">
+        <section data-track-section="hero" className="grid items-center gap-10 py-6 md:grid-cols-[1.15fr_0.85fr] md:py-10">
           <div>
             <p className="gold-label mb-4">A problem-solving network</p>
             <h1 className="max-w-xl text-[2rem] font-semibold leading-[1.12] tracking-tight text-pearl sm:text-5xl md:text-6xl">
@@ -58,7 +58,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="how-it-works" className="py-16">
+        <section id="how-it-works" data-track-section="how-it-works" className="py-16">
           <p className="gold-label mb-3">How it works</p>
           <h2 className="mb-8 text-3xl font-semibold text-pearl">
             Problem, shared understanding, existing solutions, then maybe software.
@@ -76,7 +76,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="commons" className="py-10">
+        <section id="commons" data-track-section="commons" className="py-10">
           <p className="gold-label mb-3">The Problem Commons</p>
           <h2 className="mb-4 text-3xl font-semibold text-pearl">Problems are first-class. Not app ideas.</h2>
           <p className="mb-8 max-w-2xl text-champagne">
@@ -98,7 +98,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="pricing" className="py-16">
+        <section id="pricing" data-track-section="boost" className="py-16">
           <div className="panel p-8 md:p-10">
             <p className="gold-label mb-3">Free to solve</p>
             <h2 className="max-w-xl text-3xl font-semibold text-pearl">

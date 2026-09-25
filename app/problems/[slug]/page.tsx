@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
+import { trackActivity } from '@/lib/activity-client';
 import { COMMONS_HONESTY } from '@/lib/copy';
 import { commonsSolutionToProposal, getSeedProblemBySlug, makeProblemRecord, solutionsForProblem } from '@/lib/commons';
 import {
@@ -74,6 +75,7 @@ export default function ProblemPage() {
             disabled={saidToo}
             onClick={() => {
               markHaveThisProblem(problem.slug);
+              trackActivity('problem_joined', { slug: problem.slug });
               const next = getProblemBySlug(problem.slug);
               if (next) setProblem(next);
               setSaidToo(true);
@@ -81,7 +83,7 @@ export default function ProblemPage() {
           >
             {saidToo ? 'You have this problem too' : 'I have this problem too'}
           </button>
-          <a href={studioHref} className="btn-ghost">
+          <a href={studioHref} className="btn-ghost" onClick={() => trackActivity('studio_open', { from: 'problem' })}>
             Help solve this
           </a>
           <button

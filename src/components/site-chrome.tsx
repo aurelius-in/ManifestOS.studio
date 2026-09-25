@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { BrandMark } from '@/components/brand-mark';
+import { TrackedProblemForm } from '@/components/tracked-problem-form';
 import { CAMPAIGN_FOLLOW, CAMPAIGN_LINE, CTA_LABEL, ONE_LINER } from '@/lib/copy';
 
 const nav = [
@@ -58,25 +59,5 @@ export function ProblemCapture({
   defaultProblem?: string;
   action?: string;
 }) {
-  return (
-    <form id="tell-us" action={action} method="get" className="mt-8">
-      <div className="panel p-4 shadow-glow-strong">
-        <textarea
-          name="problem"
-          aria-label={CTA_LABEL}
-          defaultValue={defaultProblem}
-          className="h-36 w-full resize-none bg-transparent text-base text-pearl outline-none placeholder:text-champagne"
-          placeholder="Describe something that should work better."
-        />
-      </div>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button type="submit" className="btn-gold">
-          {CTA_LABEL}
-        </button>
-        <Link href="/manifesto" className="btn-ghost">
-          Read the manifesto
-        </Link>
-      </div>
-    </form>
-  );
+  return <TrackedProblemForm defaultProblem={defaultProblem} action={action} />;
 }
