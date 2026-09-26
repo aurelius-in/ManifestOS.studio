@@ -1,9 +1,11 @@
 import { activityGate } from "@/lib/activity-gate";
 import { loadActivity } from "@/lib/activity-log";
+import { getMany, listKeys } from "@/lib/blob-store";
 import {
   ACTIVITY_RANGES,
   buildActivityStats,
   parseActivityRange,
+  rangeStartMs,
   type ActivityRange,
   type ActivityStats,
 } from "@/lib/activity-stats";
@@ -29,11 +31,21 @@ export default async function ActivityPage({ searchParams }: { searchParams: Sea
       </main>
     );
   }
-  const stats = buildActivityStats(await loadActivity(), parseActivityRange(rangeRaw));
-  return <Board stats={stats} adminKey={key || ""} />;
+  const range = parseActivityRange(rangeRaw);
+  const [events, waitlist] = await Promise.all([loadActivity(rangeStartMs(range)), loadWaitlist()]);
+  const stats = buildActivityStats(events, range);
+  return <Board stats={stats} adminKey={key || ""} waitlist={waitlist} />;
 }
 
-function Board({ stats, adminKey }: { stats: ActivityStats; adminKey: string }) {
+type WaitlistRow = { email: string; kind: string; context: string; at: string };
+
+async function loadWaitlist(): Promise<WaitlistRow[]> {
+  const keys = await listKeys("waitlist/", 200);
+  const rows = await getMany<WaitlistRow>(keys);
+  return rows.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 60);
+}
+
+function Board({ stats, adminKey, waitlist }: { stats: ActivityStats; adminKey: string; waitlist: WaitlistRow[] }) {
   const href = (range: ActivityRange) => {
     const params = new URLSearchParams();
     if (adminKey) params.set("key", adminKey);
@@ -76,6 +88,49 @@ function Board({ stats, adminKey }: { stats: ActivityStats; adminKey: string }) 
           <Stat label="Page views" value={stats.pageViews} />
           <Stat label="Typical session" value={stats.medianSessionLabel} />
         </div>
+
+        <section className="panel p-5">
+          <h2 className="text-lg font-semibold text-pearl">Money</h2>
+          <p className="mt-1 text-sm text-champagne">The paid path: Blueprint offer, checkout, and the Keep waitlist that tells us whether to build it.</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Saw the Blueprint offer" value={stats.money.offerViews} />
+            <Stat label="Clicked to buy" value={stats.money.checkoutClicks} />
+            <Stat label="Blueprints bought" value={stats.money.blueprintsPaid} />
+            <Stat label="Pricing page" value={stats.money.pricingViews} />
+            <Stat label="Blueprint waitlist" value={stats.money.waitlist.blueprint} />
+            <Stat label="Keep waitlist" value={stats.money.waitlist.keep} />
+            <Stat label="Follow a problem" value={stats.money.waitlist.problem} />
+          </div>
+        </section>
+
+        <section className="panel p-5">
+          <h2 className="text-lg font-semibold text-pearl">Emails collected</h2>
+          <p className="mt-1 text-sm text-champagne">Newest first, all time. Blueprint and Keep are people asking to pay. Follow is people who care about a problem.</p>
+          {waitlist.length === 0 ? (
+            <p className="mt-4 text-sm text-champagne">No emails yet.</p>
+          ) : (
+            <table className="mt-4 w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-champagne">
+                <tr>
+                  <th className="py-1">When</th>
+                  <th>List</th>
+                  <th>Email</th>
+                  <th>About</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waitlist.map((row) => (
+                  <tr key={`${row.at}-${row.email}`} className="border-t border-[rgba(232,176,32,0.12)] align-top text-pearl">
+                    <td className="py-2 pr-3 text-xs text-champagne">{new Date(row.at).toLocaleDateString()}</td>
+                    <td className="pr-3">{row.kind}</td>
+                    <td className="pr-3">{row.email}</td>
+                    <td className="text-champagne">{row.context.slice(0, 120)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
 
         <section className="panel p-5">
           <h2 className="text-lg font-semibold text-pearl">How far a problem travels</h2>
@@ -129,7 +184,6 @@ function Board({ stats, adminKey }: { stats: ActivityStats; adminKey: string }) 
               <Stat label="Studio opened" value={stats.commitment.studioOpened} />
               <Stat label="Reached a plan" value={stats.commitment.reachedPlan} />
               <Stat label="Reached software" value={stats.commitment.reachedSoftware} />
-              <Stat label="Boost page" value={stats.commitment.boostViews} />
               <Stat label="Signup started" value={stats.signups.started} hint="No signup exists yet. This stays at zero until one does." />
             </div>
           </section>

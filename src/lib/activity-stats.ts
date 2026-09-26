@@ -33,7 +33,7 @@ export function dailyKpis(stats: ActivityStats): DailyKpi[] {
   return [
     { label: "Sessions", value: String(stats.sessions) },
     { label: "Problems submitted", value: String(stats.commitment.problemSubmitted) },
-    { label: "Opened the studio", value: String(stats.commitment.studioOpened) },
+    { label: "Blueprints bought", value: String(stats.money.blueprintsPaid) },
   ];
 }
 
@@ -70,6 +70,13 @@ export type ActivityStats = {
     boostViews: number;
   };
   signups: { seen: number; started: number; completed: number };
+  money: {
+    offerViews: number;
+    checkoutClicks: number;
+    blueprintsPaid: number;
+    pricingViews: number;
+    waitlist: { blueprint: number; keep: number; problem: number };
+  };
   recent: {
     id: string;
     when: string;
@@ -151,6 +158,24 @@ const FUNNEL: { key: string; label: string; hint: string; test: (names: Set<stri
     label: "Adapt / share",
     hint: "Marked the path resolved",
     test: (names) => names.has("stage:resolved"),
+  },
+  {
+    key: "offer",
+    label: "Saw the Blueprint offer",
+    hint: "After the plan or the preview",
+    test: (names) => names.has("blueprint_offer_view"),
+  },
+  {
+    key: "checkout",
+    label: "Clicked to buy",
+    hint: "Opened Blueprint checkout",
+    test: (names) => names.has("blueprint_checkout_click"),
+  },
+  {
+    key: "paid",
+    label: "Bought a Blueprint",
+    hint: "Paid and received the Blueprint",
+    test: (names) => names.has("blueprint_paid"),
   },
 ];
 
@@ -388,6 +413,15 @@ export function buildActivityStats(events: ActivityEvent[], range: ActivityRange
     reachedSoftware: sessions.filter((bag) => bag.names.has("stage:build") || bag.names.has("stage:preview") || bag.names.has("stage:refine")).length,
     boostViews: sessions.filter((bag) => bag.paths.has("/boost")).length,
   };
+  const waitlistKind = (kind: string) =>
+    windowed.filter((event) => event.name === "waitlist_join" && event.props.kind === kind).length;
+  const money = {
+    offerViews: has("blueprint_offer_view"),
+    checkoutClicks: has("blueprint_checkout_click"),
+    blueprintsPaid: has("blueprint_paid"),
+    pricingViews: sessions.filter((bag) => bag.paths.has("/pricing")).length,
+    waitlist: { blueprint: waitlistKind("blueprint"), keep: waitlistKind("keep"), problem: waitlistKind("problem") },
+  };
   const signups = {
     seen: sessions.filter((bag) => bag.names.has("signup_view")).length,
     started: sessions.filter((bag) => bag.names.has("signup_started") || bag.names.has("signup_submitted")).length,
@@ -433,6 +467,7 @@ export function buildActivityStats(events: ActivityEvent[], range: ActivityRange
     stages,
     commitment,
     signups,
+    money,
     recent,
     insights,
   };

@@ -7,4 +7,15 @@ export const FRAME =
   'A problem-solving network that can build software. The shared operating system for turning problems into solutions.';
 export const COMMONS_HONESTY =
   'The Problem Commons is just getting started. What you see is a seeded demo plus problems saved in this browser, not a live network of thousands.';
+export const SUPPORT_EMAIL = 'oliver@makeitrainapp.com';
+export const BLUEPRINT_CONTENTS = [
+  'What should exist, and how you will know it works',
+  'What to leave out, so it stays small',
+  'Every screen and every step through it',
+  'What it remembers, and who can see it',
+  'What it must ask before doing, and must never do',
+  'Stranger checks a first-time person must pass',
+  'Four paste-ready prompts: Lovable, Replit, Cursor or Claude Code, Microsoft Copilot',
+  'A first-week check: the signal it is working, and when to stop',
+];
 export const DEFAULT_PROBLEM = "My elderly dad can't reliably remember whether the dog has already been fed.";

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { SiteFooter, SiteHeader } from '@/components/site-chrome';
 import { trackActivity } from '@/lib/activity-client';
+import { WaitlistForm } from '@/components/waitlist-form';
 import { COMMONS_HONESTY } from '@/lib/copy';
 import { commonsSolutionToProposal, getSeedProblemBySlug, makeProblemRecord, solutionsForProblem } from '@/lib/commons';
 import {
@@ -97,6 +98,18 @@ export default function ProblemPage() {
           >
             {copied ? 'Link copied' : 'Copy problem link'}
           </button>
+        </div>
+
+        <div className="panel-quiet mt-8 p-5">
+          <p className="text-pearl">Tell me when someone solves this, or adapts a solution for it.</p>
+          <div className="mt-3">
+            <WaitlistForm
+              kind="problem"
+              context={`${problem.slug} | ${problem.statement}`}
+              cta="Tell me"
+              done="Done. We will email you when this problem gets a solution."
+            />
+          </div>
         </div>
 
         <section className="mt-12">

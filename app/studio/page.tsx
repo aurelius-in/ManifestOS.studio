@@ -23,6 +23,7 @@ import {
   SolutionProposal,
 } from '@/lib/domain';
 import { trackActivity } from '@/lib/activity-client';
+import { BlueprintOffer, type BlueprintOfferInput } from '@/components/blueprint-offer';
 import { CTA_LABEL, DEFAULT_PROBLEM } from '@/lib/copy';
 import {
   SEEDED_SOLUTIONS,
@@ -114,6 +115,31 @@ export default function StudioPage() {
   const hasExisting = matches.some((match) => match.solutions.length > 0);
   const statusText = useMemo(() => buildDiscoveryStatusText(problem, answers), [problem, answers]);
   const approaches = APPROACHES.filter((item) => !item.needsExisting || hasExisting);
+
+  const offerInput = useMemo<BlueprintOfferInput | null>(() => {
+    if (!brief || !selectedSolution || !selectedSolution.requiresSoftware) return null;
+    return {
+      problem,
+      answers: questions
+        .map((q) => ({ question: q.question, answer: answers[q.id] || '' }))
+        .filter((a) => a.answer.trim()),
+      brief: {
+        summary: brief.summary,
+        affectedUsers: brief.affectedUsers,
+        currentWorkaround: brief.currentWorkaround,
+        friction: brief.friction,
+        desiredOutcome: brief.desiredOutcome,
+      },
+      solution: {
+        title: selectedSolution.title,
+        summary: selectedSolution.plainLanguageSummary,
+        howItWorks: selectedSolution.howItWorks,
+        mvpFeatures: selectedSolution.mvpFeatures,
+        nonGoals: selectedSolution.nonGoals,
+        privacyNotes: selectedSolution.privacyNotes,
+      },
+    };
+  }, [answers, brief, problem, questions, selectedSolution]);
 
   const activeStage =
     flowStage === 'problem' ? 0
@@ -544,18 +570,26 @@ export default function StudioPage() {
           )}
 
           {flowStage === 'blueprint' && selectedSolution && (
-            <BlueprintView artifacts={artifacts} solution={selectedSolution} onBuild={startBuild} />
+            <>
+              <BlueprintView artifacts={artifacts} solution={selectedSolution} onBuild={startBuild} />
+              {offerInput && <BlueprintOffer input={offerInput} placement="plan" />}
+            </>
           )}
 
           {(flowStage === 'build' || flowStage === 'preview') && (
-            <BuildView
-              isGenerating={isGenerating}
-              buildStep={buildStep}
-              app={app}
-              versionLabel={versions[currentVersionIndex]?.label}
-              onRefine={() => setFlowStage('refine')}
-              onShare={() => setFlowStage('resolved')}
-            />
+            <>
+              <BuildView
+                isGenerating={isGenerating}
+                buildStep={buildStep}
+                app={app}
+                versionLabel={versions[currentVersionIndex]?.label}
+                onRefine={() => setFlowStage('refine')}
+                onShare={() => setFlowStage('resolved')}
+              />
+              {flowStage === 'preview' && !isGenerating && offerInput && (
+                <BlueprintOffer input={offerInput} placement="preview" />
+              )}
+            </>
           )}
 
           {flowStage === 'refine' && app && (

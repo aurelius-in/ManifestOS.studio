@@ -2,6 +2,7 @@ import { BrandMark } from '@/components/brand-mark';
 import { SiteFooter, SiteHeader, ProblemCapture } from '@/components/site-chrome';
 import { CAMPAIGN_FOLLOW, CAMPAIGN_LINE, DEFAULT_PROBLEM, FRAME, ONE_LINER } from '@/lib/copy';
 import { SEEDED_PROBLEMS } from '@/lib/commons';
+import { BLUEPRINT_PRICE_LABEL } from '@/lib/paid-config';
 
 const journey = [
   ['Problem', 'Something that should work better becomes a public page'],
@@ -105,10 +106,11 @@ export default function HomePage() {
               Describe a problem, create an ordinary solution, use it, share it, adapt it. Free.
             </h2>
             <p className="mt-4 max-w-2xl text-champagne">
-              We do not ask for a credit card to begin. We also do not promise unlimited compute forever. If a solution needs help traveling, that is Manifest Boost, later, and optional.
+              No credit card to begin. When you are ready to build it with any AI builder, a Build-Ready Blueprint written for
+              your exact problem is {BLUEPRINT_PRICE_LABEL} once. Optional, and only then.
             </p>
-            <a href="/boost" className="btn-ghost mt-8 inline-flex">
-              How Manifest Boost might work
+            <a href="/pricing" className="btn-ghost mt-8 inline-flex">
+              See what is free and what is paid
             </a>
           </div>
         </section>

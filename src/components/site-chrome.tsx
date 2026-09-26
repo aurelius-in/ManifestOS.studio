@@ -6,7 +6,7 @@ import { CAMPAIGN_FOLLOW, CAMPAIGN_LINE, CTA_LABEL, ONE_LINER } from '@/lib/copy
 const nav = [
   { href: '/manifesto', label: 'Manifesto' },
   { href: '/commons', label: 'Commons' },
-  { href: '/boost', label: 'Boost' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/you', label: 'You' },
 ] as const;
 
@@ -41,7 +41,7 @@ export function SiteFooter() {
         <Link href="/manifesto" className="hover:text-pearl">Manifesto</Link>
         <Link href="/commons" className="hover:text-pearl">The Problem Commons</Link>
         <Link href="/essay" className="hover:text-pearl">One problem, a family of solutions</Link>
-        <Link href="/boost" className="hover:text-pearl">Manifest Boost</Link>
+        <Link href="/pricing" className="hover:text-pearl">Pricing</Link>
         <Link href="/you" className="hover:text-pearl">You</Link>
         <Link href="/studio" className="hover:text-pearl">Studio</Link>
       </div>
